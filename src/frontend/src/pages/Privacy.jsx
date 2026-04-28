@@ -134,7 +134,7 @@ export default function Privacy() {
             </div>
           </div>
           <a
-            href="mailto:support@hantruong.vn"
+            href="mailto:admin.support.software@gmail.com?subject=Hỗ trợ Học tiếng Trung"
             className="px-6 py-3 bg-white text-slate-800 rounded-2xl font-bold hover:bg-slate-100 transition-colors whitespace-nowrap flex items-center gap-2"
           >
             <Mail className="w-4 h-4" />

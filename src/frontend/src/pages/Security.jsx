@@ -156,7 +156,7 @@ export default function Security() {
           <h2 className="text-2xl font-black mb-2">Phát hiện lỗ hổng bảo mật?</h2>
           <p className="text-white/70 mb-6">Chúng tôi trân trọng mọi báo cáo từ cộng đồng. Hãy liên hệ ngay để cùng bảo vệ hệ thống.</p>
           <a
-            href="mailto:security@hantruong.vn"
+            href="mailto:admin.support.software@gmail.com?subject=Hỗ trợ Học tiếng Trung"
             className="inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-600 rounded-2xl font-black hover:bg-indigo-50 transition-colors shadow-lg"
           >
             <ShieldCheck className="w-5 h-5" />

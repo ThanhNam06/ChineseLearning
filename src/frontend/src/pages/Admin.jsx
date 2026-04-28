@@ -8,6 +8,7 @@ import { BookOpen, Plus, Loader2, Heart, Coffee, Star, Zap, ShieldCheck } from '
 export default function Admin() {
   const { user } = useSelector(state => state.auth);
   const [tab, setTab] = useState('donate');
+  const [selectedTier, setSelectedTier] = useState(null);
   
   const [lessonForm, setLessonForm] = useState({
     title: '', type: 'listening', hsk_level: 1, topic: '',
@@ -124,28 +125,71 @@ export default function Admin() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {donationTiers.map((tier, idx) => (
-                <div key={idx} className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 text-center group cursor-pointer">
+                <div key={idx} 
+                  onClick={() => { setSelectedTier(tier); setMsg(''); }}
+                  className={`bg-white rounded-[2rem] p-8 border transition-all duration-300 text-center group cursor-pointer ${selectedTier?.title === tier.title ? 'border-indigo-500 ring-4 ring-indigo-50 shadow-xl scale-105' : 'border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2'}`}>
                   <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${tier.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                     {tier.icon}
                   </div>
                   <h4 className="text-xl font-black text-slate-800 mb-1">{tier.title}</h4>
                   <p className="text-2xl font-black text-indigo-600 mb-4">{tier.price}</p>
                   <p className="text-sm font-medium text-slate-500">{tier.desc}</p>
-                  <button className="w-full mt-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors border border-slate-200">
-                    Chọn gói này
+                  <button className={`w-full mt-6 py-3 font-bold rounded-xl transition-all border ${selectedTier?.title === tier.title ? 'bg-indigo-600 text-white border-transparent' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'}`}>
+                    {selectedTier?.title === tier.title ? 'Đã chọn' : 'Chọn gói này'}
                   </button>
                 </div>
               ))}
             </div>
 
-            <div className="mt-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[2.5rem] p-10 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-300">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
-              <h4 className="text-2xl font-black mb-2 relative z-10">Chuyển khoản trực tiếp</h4>
-              <p className="font-medium text-indigo-100 mb-6 relative z-10">Nội dung CK: [Tên của bạn] + [Email đăng nhập]</p>
-              <div className="inline-block bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 relative z-10 font-mono text-lg font-bold tracking-widest">
-                0123 456 789 — Vietcombank
-              </div>
-            </div>
+            <AnimatePresence>
+              {selectedTier && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+                  className="mt-12 bg-white rounded-[3rem] p-8 md:p-12 border-2 border-indigo-100 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-10"
+                >
+                  <div className="flex-1 space-y-6 text-center md:text-left">
+                    <div>
+                      <span className="px-4 py-1.5 bg-indigo-100 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest">Thông tin thanh toán</span>
+                      <h4 className="text-3xl font-black text-slate-800 mt-4">Hỗ trợ gói: {selectedTier.title}</h4>
+                      <p className="text-slate-500 font-medium mt-2">Cảm ơn bạn đã đồng hành cùng chúng tôi. Vui lòng quét mã QR hoặc chuyển khoản theo thông tin bên cạnh.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nội dung chuyển khoản</p>
+                        <p className="text-lg font-black text-indigo-600 tracking-tight">[{user?.email?.split('@')[0]}] + Ủng hộ {selectedTier.title}</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400 font-bold">Ngân hàng:</span>
+                          <span className="text-slate-800 font-black">BIDV</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400 font-bold">Chủ tài khoản:</span>
+                          <span className="text-slate-800 font-black">HA THANH NAM</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400 font-bold">Số tài khoản:</span>
+                          <span className="text-slate-800 font-black">8852865037</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 p-4 bg-white rounded-3xl shadow-xl border border-indigo-50 group">
+                    <div className="relative">
+                      <img 
+                        src="/src/assets/qr_code.png" 
+                        alt="QR Payment" 
+                        className="w-64 h-auto md:w-80 rounded-2xl transition-transform duration-500 group-hover:scale-105"
+                        onError={(e) => { e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://github.com/ThanhNam06/ChineseLearning'; }}
+                      />
+                      <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-2xl pointer-events-none"></div>
+                    </div>
+                    <p className="text-center text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-4">Quét mã để thanh toán</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 

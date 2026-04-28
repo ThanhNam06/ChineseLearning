@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Flame, Star, RefreshCw, Swords, Medal, UserPlus, Clock, Check } from 'lucide-react';
+import { Trophy, Flame, Star, RefreshCw, Swords, Medal, UserPlus, Clock, Check, Heart, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSelector } from 'react-redux';
 import { getRankInfo } from '../lib/ranks';
@@ -41,6 +41,8 @@ export default function Leaderboard() {
       query = query.order('exp', { ascending: false });
     } else if (activeTab === 'elo') {
       query = query.order('elo_rating', { ascending: false });
+    } else if (activeTab === 'sponsors') {
+      query = query.eq('is_sponsor', true).order('exp', { ascending: false });
     }
 
     const { data, error } = await query.limit(20);
@@ -97,6 +99,7 @@ export default function Leaderboard() {
         {[
           { id: 'exp', label: 'Bậc Thầy EXP', icon: Star },
           { id: 'elo', label: 'Chiến Thần Elo', icon: Swords },
+          { id: 'sponsors', label: 'Nhà Tài Trợ', icon: Heart },
         ].map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -110,6 +113,42 @@ export default function Leaderboard() {
         ))}
       </div>
 
+      {/* Featured Sponsors (Vinh Danh) */}
+      {activeTab === 'sponsors' && (
+        <div className="bg-gradient-to-br from-rose-500 via-pink-600 to-indigo-700 rounded-[3rem] p-1 relative overflow-hidden shadow-2xl">
+          <div className="bg-white/95 backdrop-blur-xl rounded-[2.8rem] p-8 md:p-12">
+            <div className="absolute top-0 right-0 p-10 opacity-10">
+              <Sparkles size={120} />
+            </div>
+            <div className="relative z-10 text-center space-y-4">
+              <div className="inline-flex items-center gap-2 bg-rose-100 text-rose-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
+                <Medal className="w-4 h-4" /> Bảng Vàng Vinh Danh
+              </div>
+              <h3 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">Cảm ơn những Chân Tiên</h3>
+              <p className="text-slate-500 max-w-xl mx-auto font-medium">
+                Những người đã góp phần duy trì và phát triển nền tảng học tiếng Trung AI. Sự đồng hành của các bạn là động lực lớn nhất của chúng tôi.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+                {leaders.length > 0 ? leaders.map(leader => (
+                  <div key={leader.id} className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-3 group hover:bg-white hover:shadow-xl transition-all">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 p-0.5 shadow-lg group-hover:rotate-6 transition-transform">
+                      <div className="w-full h-full bg-white rounded-[0.9rem] flex items-center justify-center text-xl font-black">
+                        {leader.avatar_url ? <img src={leader.avatar_url} className="w-full h-full object-cover rounded-[0.9rem]" /> : leader.username?.[0] || '?'}
+                      </div>
+                    </div>
+                    <p className="font-black text-slate-800 text-sm truncate w-full text-center">{leader.username || 'Sponsor'}</p>
+                    <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Thẻ Chân Tiên</span>
+                  </div>
+                )) : (
+                  <div className="col-span-full py-10 text-slate-400 font-bold italic">Đang chờ những vị Chân Tiên đầu tiên...</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -119,7 +158,7 @@ export default function Leaderboard() {
           className="space-y-6"
         >
           {/* Top 3 Podium */}
-          {!loading && leaders.length >= 3 && (
+          {!loading && leaders.length >= 3 && activeTab !== 'sponsors' && (
             <div className="grid grid-cols-3 gap-6 pt-10 pb-6">
               {[leaders[1], leaders[0], leaders[2]].map((leader, i) => {
                 const rank = i === 1 ? 1 : i === 0 ? 2 : 3;
