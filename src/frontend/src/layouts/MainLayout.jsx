@@ -37,12 +37,16 @@ export default function MainLayout() {
   const SidebarContent = () => (
     <>
       <div className="p-8 pb-6 flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-indigo-600 flex items-center gap-3">
-          <span className="text-3xl md:text-4xl">汉</span>
-          Học tiếng Trung
-        </h1>
-        <button className="lg:hidden p-2 text-slate-400 hover:text-slate-800" onClick={() => setIsMobileMenuOpen(false)}>
-          <X className="w-6 h-6" />
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <GraduationCap className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+            Học tiếng Trung
+          </h1>
+        </Link>
+        <button className="lg:hidden p-2 text-slate-400 hover:text-slate-800 bg-slate-50 rounded-xl" onClick={() => setIsMobileMenuOpen(false)}>
+          <X className="w-5 h-5" />
         </button>
       </div>
       

@@ -98,20 +98,31 @@ export default function Learning() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-        <div className="flex items-center gap-5">
-          <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl">
+      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="flex items-center gap-5 relative z-10">
+          <div className="p-4 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 rounded-2xl shadow-inner">
             <BookOpen className="w-8 h-8" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-slate-800 tracking-tight">Trung Tâm Học Tập</h2>
-            <p className="text-slate-500 font-medium mt-1">Luyện kỹ năng Nghe & Đọc qua các bài học thực tế. Hoàn thành để nhận EXP!</p>
+            <p className="text-slate-500 font-medium mt-1">Luyện kỹ năng Nghe & Đọc qua các bài học thực tế.</p>
           </div>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-3 flex-wrap relative z-10 items-center">
+          <button 
+            onClick={() => setSelectedLesson({ id: 'custom', title: 'Phòng Tập Tiếng Trung', type: 'listening', hsk_level: 'Tùy chọn', topic: 'Tự do', content: '', pinyin: 'Sử dụng AI để phát âm chuẩn', translation: 'Bạn có thể nhập bất kỳ câu văn tiếng Trung nào để nghe' })}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-xl shadow-indigo-200 transition-all hover:scale-105 active:scale-95"
+          >
+            <Headphones className="w-5 h-5" />
+            Tự Nhập Câu
+          </button>
+          
+          <div className="h-10 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
           {[{ id: 'all', label: 'Tất cả' }, { id: 'listening', label: '🎧 Nghe' }, { id: 'reading', label: '📖 Đọc' }].map(t => (
             <button key={t.id} onClick={() => setFilterType(t.id)}
-              className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${filterType === t.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+              className={`px-5 py-3 rounded-2xl font-bold text-sm transition-all ${filterType === t.id ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
               {t.label}
             </button>
           ))}
@@ -132,24 +143,7 @@ export default function Learning() {
         {/* Lesson List */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Custom Input Lesson */}
-          <motion.div
-            onClick={() => setSelectedLesson({ id: 'custom', title: 'Tự nhập văn bản', type: 'reading', hsk_level: 'Tùy chọn', topic: 'Tự do', content: '', pinyin: 'Sử dụng công cụ phát âm', translation: 'Bạn có thể nhập bất kỳ đoạn văn nào' })}
-            className={`p-6 rounded-3xl border cursor-pointer transition-all group ${selectedLesson?.id === 'custom'
-              ? 'bg-slate-800 border-slate-800 text-white shadow-xl shadow-slate-200'
-              : 'bg-gradient-to-r from-slate-50 to-white border-dashed border-2 border-slate-300 hover:border-slate-500 shadow-sm'}`}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${selectedLesson?.id === 'custom' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                ✍️ Tự do
-              </span>
-            </div>
-            <h4 className={`text-lg font-black mb-1 ${selectedLesson?.id === 'custom' ? 'text-white' : 'text-slate-800'}`}>Luyện Đọc Văn Bản Bất Kỳ</h4>
-            <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${selectedLesson?.id === 'custom' ? 'text-slate-300' : 'text-slate-500'}`}>Nhập hoặc dán văn bản</span>
-              <ChevronRight className={`w-4 h-4 ${selectedLesson?.id === 'custom' ? 'text-white' : 'text-slate-400 group-hover:text-slate-800'}`} />
-            </div>
-          </motion.div>
+          {/* Removed inline custom input card to declutter */}
 
           {loading ? (
             [...Array(3)].map((_, i) => <div key={i} className="h-28 bg-white rounded-3xl animate-pulse border border-slate-100"></div>)
