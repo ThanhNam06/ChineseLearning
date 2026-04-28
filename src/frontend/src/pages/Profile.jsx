@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useSelector, useDispatch } from 'react-redux';
 import { setProfile } from '../store/authSlice';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Save, Star, Flame, Award, Loader2, EyeOff, Eye, UserPlus, Users } from 'lucide-react';
 
 export default function Profile() {
