@@ -96,7 +96,7 @@ export default function MainLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
+    <div className="flex h-screen bg-[var(--bg-color)] font-sans text-slate-800 overflow-hidden transition-colors duration-300">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-72 bg-white border-r border-slate-200 flex-col shadow-sm relative z-30">
         <SidebarContent />

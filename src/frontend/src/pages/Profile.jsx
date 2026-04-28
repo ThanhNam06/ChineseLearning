@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useSelector, useDispatch } from 'react-redux';
 import { setProfile } from '../store/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Save, Star, Flame, Award, Loader2, EyeOff, Eye, UserPlus, Users } from 'lucide-react';
+import { Camera, Save, Star, Flame, Award, Loader2, EyeOff, Eye, UserPlus, Users, Palette, Moon, Sun } from 'lucide-react';
 
 export default function Profile() {
   const dispatch = useDispatch();
@@ -16,15 +16,24 @@ export default function Profile() {
   const [badges, setBadges] = useState([]);
   const [userBadgeIds, setUserBadgeIds] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
+  const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'light');
+  const [pattern, setPattern] = useState(localStorage.getItem('app-pattern') || 'cubes');
   const fileInputRef = useRef();
 
   useEffect(() => {
-    if (profile) { 
+    if (profile && username === '') { // Only set on initial load to avoid resets
       setUsername(profile.username || ''); 
       setAvatarUrl(profile.avatar_url || ''); 
       setIsAnonymous(profile.is_anonymous || false);
     }
-  }, [profile]);
+  }, [profile, username]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-pattern', pattern);
+    localStorage.setItem('app-theme', theme);
+    localStorage.setItem('app-pattern', pattern);
+  }, [theme, pattern]);
 
   useEffect(() => {
     if (!user) return;
@@ -83,6 +92,16 @@ export default function Profile() {
     finally { setSaving(false); }
   };
 
+  const handleToggleAnonymous = async () => {
+    const newVal = !isAnonymous;
+    setIsAnonymous(newVal);
+    if (user) {
+      const updates = { is_anonymous: newVal };
+      await supabase.from('profiles').update(updates).eq('id', user.id);
+      dispatch(setProfile({ ...profile, ...updates }));
+    }
+  };
+
   const handleAcceptFriend = async (requestId) => {
     await supabase.from('friend_requests').update({ status: 'accepted' }).eq('id', requestId);
     setFriendRequests(prev => prev.filter(r => r.id !== requestId));
@@ -103,33 +122,38 @@ export default function Profile() {
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
         </div>
         
-        <div className="px-8 pb-8 -mt-20 relative z-10">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-[2.5rem] border-4 border-white shadow-2xl overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105">
+        <div className="px-8 pb-8 relative z-10">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+            {/* Avatar Section */}
+            <div className="relative group -mt-20 md:-mt-24">
+              <div className="w-32 h-32 md:w-44 md:h-44 rounded-[2.5rem] border-8 border-white shadow-2xl overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105">
                 {avatarUrl ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> :
-                  <span className="text-5xl font-black text-indigo-400 uppercase">{(profile?.username || user?.email || 'U')[0]}</span>}
+                  <span className="text-6xl font-black text-indigo-400 uppercase">{(profile?.username || user?.email || 'U')[0]}</span>}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={() => fileInputRef.current.click()}>
-                  <Camera className="w-8 h-8 text-white" />
+                  <Camera className="w-10 h-10 text-white" />
                 </div>
               </div>
               <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleAvatarUpload} />
             </div>
             
-            <div className="flex-1 space-y-2">
-              <input value={username} onChange={e => setUsername(e.target.value)}
-                placeholder={user?.email?.split('@')[0] || 'Tên hiển thị'}
-                className="text-3xl md:text-4xl font-black text-slate-800 bg-transparent border-b-2 border-transparent focus:border-indigo-500 outline-none pb-1 w-full max-w-sm transition-all text-center md:text-left" />
-              <p className="text-slate-400 text-sm font-medium">{user?.email}</p>
+            {/* User Info Section - Ensuring it stays on one background */}
+            <div className="flex-1 space-y-3 pt-2">
+              <div className="bg-white p-4 md:p-6 rounded-[2rem] border border-slate-100 shadow-xl inline-block w-full max-w-lg">
+                <input value={username} onChange={e => setUsername(e.target.value)}
+                  placeholder={user?.email?.split('@')[0] || 'Tên hiển thị'}
+                  className="text-3xl md:text-5xl font-black text-slate-800 bg-transparent border-b-4 border-transparent focus:border-indigo-500 outline-none w-full transition-all text-center md:text-left" />
+                <p className="text-slate-500 text-sm font-bold mt-2 px-1 uppercase tracking-widest opacity-60">{user?.email}</p>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 w-full md:w-auto">
+            {/* Quick Actions */}
+            <div className="flex flex-col gap-3 w-full md:w-auto mt-4">
               <button 
-                onClick={() => setIsAnonymous(!isAnonymous)}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm border ${
+                onClick={handleToggleAnonymous}
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-md border-2 ${
                   isAnonymous 
                   ? 'bg-slate-800 text-white border-slate-700 hover:bg-slate-900 shadow-slate-900/20' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-slate-200/50'
+                  : 'bg-white text-indigo-600 border-indigo-100 hover:bg-indigo-50 shadow-indigo-200/20'
                 }`}
               >
                 {isAnonymous ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -137,8 +161,8 @@ export default function Profile() {
               </button>
 
               <button onClick={handleSave} disabled={saving} 
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200">
-                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Lưu thay đổi
+                className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-xl shadow-indigo-200 active:scale-95">
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Lưu tất cả
               </button>
             </div>
           </div>
@@ -176,6 +200,64 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Theme Settings */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/50 shadow-xl overflow-hidden p-8">
+        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+          <Palette className="w-6 h-6 text-indigo-500" /> Cài đặt Giao diện
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button 
+            onClick={() => setTheme('light')}
+            className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${
+              theme === 'light' ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
+            }`}
+          >
+            <Sun className={`w-8 h-8 ${theme === 'light' ? 'text-indigo-600' : 'text-slate-400'}`} />
+            <span className={`font-bold ${theme === 'light' ? 'text-indigo-700' : 'text-slate-600'}`}>Sáng (Sôi động)</span>
+          </button>
+          
+          <button 
+            onClick={() => setTheme('dark')}
+            className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${
+              theme === 'dark' ? 'border-indigo-500 bg-slate-800 shadow-lg shadow-indigo-900/50' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
+            }`}
+          >
+            <Moon className={`w-8 h-8 ${theme === 'dark' ? 'text-white' : 'text-slate-400'}`} />
+            <span className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-600'}`}>Tối (Tập trung)</span>
+          </button>
+
+          <button 
+            onClick={() => setTheme('spring')}
+            className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${
+              theme === 'spring' ? 'border-rose-400 bg-rose-50 shadow-lg shadow-rose-100' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
+            }`}
+          >
+            <Star className={`w-8 h-8 ${theme === 'spring' ? 'text-rose-500' : 'text-slate-400'}`} />
+            <span className={`font-bold ${theme === 'spring' ? 'text-rose-600' : 'text-slate-600'}`}>Mùa Xuân</span>
+          </button>
+        </div>
+
+        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-8 mb-4">Họa tiết Nền</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { id: 'cubes', name: 'Lập phương', url: 'https://www.transparenttextures.com/patterns/cubes.png' },
+            { id: 'dots', name: 'Chấm bi', url: 'https://www.transparenttextures.com/patterns/carbon-fibre.png' },
+            { id: 'diamonds', name: 'Kim cương', url: 'https://www.transparenttextures.com/patterns/diamond-upholstery.png' },
+            { id: 'none', name: 'Phẳng', url: '' },
+          ].map((p) => (
+            <button 
+              key={p.id}
+              onClick={() => setPattern(p.id)}
+              className={`p-4 rounded-xl border-2 transition-all text-sm font-bold ${
+                pattern === p.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid grid-cols-3 gap-6">
         {[

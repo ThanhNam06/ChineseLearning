@@ -34,7 +34,7 @@ export default function Leaderboard() {
 
   const fetchLeaders = async () => {
     setLoading(true);
-    let query = supabase.from('profiles').select('*').neq('is_anonymous', true);
+    let query = supabase.from('profiles').select('*').or('is_anonymous.eq.false,is_anonymous.is.null');
     
     if (activeTab === 'exp') {
       query = query.order('exp', { ascending: false });

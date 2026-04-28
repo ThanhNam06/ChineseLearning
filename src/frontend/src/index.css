@@ -7,13 +7,32 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: #0f172a;
-  background-color: #f8fafc;
+  --bg-color: #f8fafc;
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --text-color: #0f172a;
+  --accent-color: #6366f1;
+  --pattern-opacity: 0.05;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme='dark'] {
+  --bg-color: #0f172a;
+  --card-bg: rgba(30, 41, 59, 0.8);
+  --text-color: #f8fafc;
+  --accent-color: #818cf8;
+  --pattern-opacity: 0.1;
+}
+
+[data-theme='spring'] {
+  --bg-color: #fff1f2;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --text-color: #881337;
+  --accent-color: #fb7185;
+  --pattern-opacity: 0.1;
 }
 
 html {
@@ -22,11 +41,18 @@ html {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-attachment: fixed;
 }
+
+[data-pattern='cubes'] body { background-image: url("https://www.transparenttextures.com/patterns/cubes.png"); }
+[data-pattern='dots'] body { background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); }
+[data-pattern='diamonds'] body { background-image: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png"); }
+[data-pattern='none'] body { background-image: none; }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
