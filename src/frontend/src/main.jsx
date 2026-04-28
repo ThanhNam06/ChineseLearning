@@ -16,11 +16,21 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-// Register Service Worker
+// Force unregister all Service Workers to prevent caching of old React bundles
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('SW registered:', reg))
-      .catch(err => console.error('SW registration failed:', err));
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.unregister();
+      console.log('SW unregistered successfully.');
+    }
   });
+  
+  // Clear browser caches to force fetching new bundle
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      names.forEach(name => {
+        caches.delete(name);
+      });
+    });
+  }
 }

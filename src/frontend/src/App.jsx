@@ -170,7 +170,7 @@ function App() {
           endpoint,
           device_name: deviceName,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,endpoint' });
+        }, { onConflict: 'user_id, endpoint' });
         
         console.log(`Push subscription active — device: ${deviceName}`);
       } catch (err) {
