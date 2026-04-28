@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Flame, Star, RefreshCw, Swords, Medal } from 'lucide-react';
+import { Trophy, Flame, Star, RefreshCw, Swords, Medal, UserPlus, Clock, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSelector } from 'react-redux';
 
@@ -28,13 +28,13 @@ export default function Leaderboard() {
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('exp'); // 'exp' | 'elo' | 'co-learning'
-  const [liveUpdate, setLiveUpdate] = useState(false);
+  const [friendStatuses, setFriendStatuses] = useState({});
   
   const { user } = useSelector(state => state.auth);
 
   const fetchLeaders = async () => {
     setLoading(true);
-    let query = supabase.from('profiles').select('*');
+    let query = supabase.from('profiles').select('*').neq('is_anonymous', true);
     
     if (activeTab === 'exp') {
       query = query.order('exp', { ascending: false });
@@ -44,8 +44,34 @@ export default function Leaderboard() {
 
     const { data, error } = await query.limit(20);
 
-    if (!error && data) setLeaders(data);
+    if (!error && data) {
+      setLeaders(data);
+      if (user) {
+        // Fetch friend statuses for these leaders
+        const leaderIds = data.map(d => d.id);
+        const { data: rels } = await supabase.from('friend_requests')
+          .select('*')
+          .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+        
+        const statusMap = {};
+        rels?.forEach(rel => {
+          const otherId = rel.sender_id === user.id ? rel.receiver_id : rel.sender_id;
+          statusMap[otherId] = rel.status; // 'pending' or 'accepted'
+        });
+        setFriendStatuses(statusMap);
+      }
+    }
     setLoading(false);
+  };
+
+  const handleAddFriend = async (receiverId) => {
+    if (!user) return alert("Vui lòng đăng nhập");
+    setFriendStatuses(prev => ({ ...prev, [receiverId]: 'pending' }));
+    await supabase.from('friend_requests').insert({
+      sender_id: user.id,
+      receiver_id: receiverId,
+      status: 'pending'
+    });
   };
 
   useEffect(() => {
@@ -128,19 +154,38 @@ export default function Leaderboard() {
                 >
                   <div className="flex items-center gap-6">
                     <span className="text-xl font-black text-slate-300 w-8">#{index + 1}</span>
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-slate-100 rounded-2xl flex items-center justify-center font-bold text-slate-600 text-lg">
-                      {leader.username?.[0]?.toUpperCase() || '?'}
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-slate-100 rounded-2xl flex items-center justify-center font-bold text-slate-600 text-lg overflow-hidden">
+                      {leader.avatar_url ? <img src={leader.avatar_url} className="w-full h-full object-cover"/> : leader.username?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div>
-                      <p className="font-black text-slate-800">{leader.username || 'Người dùng ẩn danh'} {leader.id === user?.id && <span className="text-xs text-indigo-500 ml-2 font-bold">(Bạn)</span>}</p>
+                      <p className="font-black text-slate-800">{leader.username || 'Người dùng'} {leader.id === user?.id && <span className="text-xs text-indigo-500 ml-2 font-bold">(Bạn)</span>}</p>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1">
                         <Flame className="w-3 h-3 text-orange-400" /> Chuỗi {leader.streak || 0} ngày
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xl font-black text-indigo-600">{activeTab === 'exp' ? leader.exp?.toLocaleString() : leader.elo_rating || 1200}</p>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{activeTab === 'exp' ? 'EXP' : 'Elo'}</p>
+                  <div className="flex items-center gap-6">
+                    {leader.id !== user?.id && (
+                      <div className="hidden md:block">
+                        {!friendStatuses[leader.id] ? (
+                          <button onClick={() => handleAddFriend(leader.id)} className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors">
+                            <UserPlus className="w-3.5 h-3.5" /> Kết bạn
+                          </button>
+                        ) : friendStatuses[leader.id] === 'pending' ? (
+                          <span className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-400 border border-slate-200 rounded-xl text-xs font-bold">
+                            <Clock className="w-3.5 h-3.5" /> Chờ xác nhận
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 rounded-xl text-xs font-bold">
+                            <Check className="w-3.5 h-3.5" /> Bạn bè
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="text-right">
+                      <p className="text-xl font-black text-indigo-600">{activeTab === 'exp' ? leader.exp?.toLocaleString() : leader.elo_rating || 1200}</p>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{activeTab === 'exp' ? 'EXP' : 'Elo'}</p>
+                    </div>
                   </div>
                 </motion.div>
               ))
