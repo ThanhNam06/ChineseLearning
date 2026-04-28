@@ -122,8 +122,9 @@ export default function Tutor() {
 
     // Thưởng EXP cho mỗi câu giao tiếp
     if (user && profile) {
-      dispatch(updateExp(10));
-      await logStudyActivity(user.id, 10, 0);
+      const expGained = Math.floor(Math.random() * 10) + 1;
+      dispatch(updateExp(expGained));
+      await logStudyActivity(user.id, expGained, 0);
     }
 
     try {
@@ -172,39 +173,43 @@ export default function Tutor() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto h-[85vh] flex flex-col space-y-4 animate-in fade-in duration-700">
+    <div className="max-w-5xl mx-auto h-[88vh] flex flex-col space-y-6 animate-in fade-in duration-700 p-2 md:p-6 relative">
+      {/* Background Glows */}
+      <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-indigo-400/10 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none"></div>
+
       {/* Header */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-orange-50 text-orange-500 rounded-2xl">
+      <div className="bg-white/80 backdrop-blur-2xl p-6 md:p-8 rounded-[2.5rem] shadow-xl shadow-indigo-900/5 border border-white/60 flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-5">
+          <div className="p-4 bg-gradient-to-br from-orange-100 to-rose-100 text-orange-600 rounded-2xl shadow-inner">
             <Flame className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">AI Tutor 1-1</h2>
-            <p className="text-slate-500 font-medium text-sm">Luyện phản xạ giao tiếp thực tế với giáo viên AI</p>
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-800 to-indigo-900 tracking-tight">AI Tutor 1-1</h2>
+            <p className="text-slate-500 font-medium text-sm mt-1">Luyện phản xạ giao tiếp thực tế với giáo viên AI</p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-xl text-indigo-600 font-bold text-sm">
-          <Sparkles className="w-4 h-4" />
-          +10 EXP / câu
+        <div className="hidden sm:flex items-center gap-2 bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 px-5 py-2.5 rounded-2xl text-indigo-600 font-black text-sm shadow-sm">
+          <Sparkles className="w-4 h-4 text-indigo-500" />
+          +1~10 EXP / câu
         </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 p-6 overflow-y-auto flex flex-col gap-6">
+      <div className="flex-1 bg-white/60 backdrop-blur-3xl rounded-[2.5rem] shadow-xl shadow-indigo-900/5 border border-white/60 p-6 md:p-8 overflow-y-auto flex flex-col gap-6 relative z-10 custom-scrollbar">
         {messages.map((msg, i) => (
           <motion.div 
             key={i} 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }} 
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-[80%] rounded-3xl p-5 ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-slate-50 border border-slate-100 text-slate-800 rounded-bl-sm'}`}>
-              <p className={`text-lg font-medium leading-relaxed ${msg.role === 'user' ? 'text-white' : 'text-slate-800'}`}>
+            <div className={`max-w-[85%] md:max-w-[75%] rounded-[2rem] p-6 shadow-sm ${msg.role === 'user' ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-br-sm shadow-indigo-200' : 'bg-white/80 border border-white text-slate-800 rounded-bl-sm backdrop-blur-md'}`}>
+              <p className={`text-[1.1rem] font-medium leading-relaxed ${msg.role === 'user' ? 'text-white' : 'text-slate-700'}`}>
                 {msg.text.includes('(') ? (
                   <>
-                    <span className="font-bold text-xl block mb-1">{msg.text.split('(')[0]}</span>
-                    <span className={`text-sm ${msg.role === 'user' ? 'text-indigo-200' : 'text-slate-500'}`}>({msg.text.split('(')[1]}</span>
+                    <span className={`font-black text-xl md:text-2xl block mb-2 ${msg.role === 'user' ? 'text-white' : 'text-slate-800'}`}>{msg.text.split('(')[0]}</span>
+                    <span className={`text-sm md:text-base ${msg.role === 'user' ? 'text-indigo-100 font-medium' : 'text-slate-500'}`}>({msg.text.split('(')[1]}</span>
                   </>
                 ) : msg.text}
               </p>
@@ -214,25 +219,25 @@ export default function Tutor() {
         
         {isTyping && (
           <div className="flex justify-start w-full">
-            <div className="bg-slate-50 border border-slate-100 rounded-3xl rounded-bl-sm p-5 flex gap-2 items-center">
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100"></span>
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200"></span>
+            <div className="bg-white/80 backdrop-blur-md border border-white rounded-[2rem] rounded-bl-sm p-6 shadow-sm flex gap-2 items-center">
+              <span className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce"></span>
+              <span className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce delay-100"></span>
+              <span className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce delay-200"></span>
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
       {/* Input Area */}
-      <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
-        <form onSubmit={handleSubmit} className="flex gap-3 items-end">
-          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl flex items-end p-2 transition-all focus-within:ring-2 focus-within:ring-indigo-100 focus-within:bg-white">
+      <div className="bg-white/80 backdrop-blur-2xl p-4 md:p-6 rounded-[2.5rem] shadow-xl shadow-indigo-900/5 border border-white/60 relative z-10">
+        <form onSubmit={handleSubmit} className="flex gap-4 items-end">
+          <div className="flex-1 bg-slate-50/50 backdrop-blur-sm border border-slate-200/60 rounded-[2rem] flex items-end p-2 transition-all focus-within:ring-4 focus-within:ring-indigo-100 focus-within:bg-white shadow-inner">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Nhập hoặc nói câu trả lời của bạn bằng tiếng Trung..."
-              className="flex-1 bg-transparent border-none outline-none resize-none max-h-32 min-h-[48px] px-3 py-3 text-slate-700 font-medium"
+              placeholder="Nhập hoặc nói câu trả lời của bạn..."
+              className="flex-1 bg-transparent border-none outline-none resize-none max-h-32 min-h-[56px] px-4 py-4 text-slate-700 font-bold text-lg placeholder:font-medium placeholder:text-slate-400"
               rows={input.split('\n').length > 1 ? Math.min(4, input.split('\n').length) : 1}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -241,36 +246,38 @@ export default function Tutor() {
                 }
               }}
             />
-            {isConnecting ? (
-              <div className="p-3 m-1 text-indigo-400">
-                <Loader2 className="w-6 h-6 animate-spin" />
-              </div>
-            ) : isRecording ? (
-              <button
-                type="button"
-                onClick={stopRecording}
-                className="p-3 m-1 bg-red-100 text-red-500 rounded-xl hover:bg-red-200 transition-colors relative"
-              >
-                <div className="absolute inset-0 rounded-xl border-2 border-red-400 animate-ping opacity-30" />
-                <Square className="w-6 h-6 fill-current" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={startRecording}
-                className="p-3 m-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 rounded-xl transition-colors"
-              >
-                <Mic className="w-6 h-6" />
-              </button>
-            )}
+            <div className="flex items-center pb-1 pr-1">
+              {isConnecting ? (
+                <div className="p-4 text-indigo-400">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : isRecording ? (
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="p-4 bg-red-100 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all duration-300 relative group"
+                >
+                  <div className="absolute inset-0 rounded-2xl border-4 border-red-400 animate-ping opacity-40" />
+                  <Square className="w-6 h-6 fill-current group-hover:scale-90 transition-transform" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startRecording}
+                  className="p-4 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 rounded-2xl transition-all duration-300"
+                >
+                  <Mic className="w-6 h-6" />
+                </button>
+              )}
+            </div>
           </div>
           
           <button
             type="submit"
             disabled={!input.trim() || isTyping}
-            className="p-4 h-[64px] w-[64px] flex items-center justify-center bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:shadow-none"
+            className="p-4 h-[72px] w-[72px] flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-3xl font-black hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl shadow-indigo-200 disabled:opacity-50 disabled:shadow-none hover:scale-105 active:scale-95 shrink-0"
           >
-            <Send className="w-6 h-6 ml-1" />
+            <Send className="w-7 h-7 ml-1" />
           </button>
         </form>
       </div>

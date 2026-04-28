@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase';
 import { useSelector, useDispatch } from 'react-redux';
 import { setProfile } from '../store/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Save, Star, Flame, Award, Loader2, EyeOff, Eye, UserPlus, Users, Palette, Moon, Sun } from 'lucide-react';
+import { Camera, Save, Star, Flame, Award, Loader2, EyeOff, Eye, UserPlus, Users, Palette, Moon, Sun, Medal } from 'lucide-react';
+import { getRankInfo } from '../lib/ranks';
 
 export default function Profile() {
   const dispatch = useDispatch();
@@ -145,8 +146,21 @@ export default function Profile() {
             <input value={username} onChange={e => setUsername(e.target.value)}
               placeholder={user?.email?.split('@')[0] || 'Tên hiển thị'}
               className="text-4xl md:text-5xl font-black text-slate-800 bg-transparent focus:bg-white/50 hover:bg-white/30 rounded-2xl px-4 py-2 -ml-4 outline-none w-full max-w-xl transition-all" />
-            <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 px-1 mt-2">
+            <div className="flex items-center justify-center md:justify-start gap-3 px-1 mt-2 flex-wrap">
               <span className="font-bold text-sm tracking-widest uppercase bg-slate-100/50 px-3 py-1 rounded-full">{user?.email}</span>
+              <span className="font-black text-sm tracking-widest uppercase text-purple-700 bg-purple-100/80 px-4 py-1 rounded-full border border-purple-200 shadow-sm flex items-center gap-1">
+                <Medal className="w-4 h-4" /> {getRankInfo(profile?.exp || 0).currentRank.name}
+              </span>
+            </div>
+            {/* Rank Progress Bar */}
+            <div className="px-1 mt-1 max-w-md w-full mx-auto md:mx-0">
+              <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">
+                <span>{getRankInfo(profile?.exp || 0).currentRank.name}</span>
+                <span>{getRankInfo(profile?.exp || 0).nextRank.name}</span>
+              </div>
+              <div className="w-full bg-slate-100/60 rounded-full h-2 overflow-hidden">
+                <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500" style={{ width: `${getRankInfo(profile?.exp || 0).progress}%` }}></div>
+              </div>
             </div>
 
             {/* Quick Stats */}

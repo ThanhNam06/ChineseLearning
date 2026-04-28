@@ -95,7 +95,7 @@ export default function Writing() {
 
   const handleComplete = useCallback(async (summaryData) => {
     const totalMistakes = summaryData.totalMistakes;
-    const expGained = totalMistakes === 0 ? 50 : Math.max(10, 50 - totalMistakes * 8);
+    const expGained = totalMistakes === 0 ? 10 : Math.max(1, 10 - totalMistakes * 2);
 
     setMistakes(totalMistakes);
     setMessage(`Hoàn thành! Lỗi: ${totalMistakes}. Bạn nhận được +${expGained} EXP!`);

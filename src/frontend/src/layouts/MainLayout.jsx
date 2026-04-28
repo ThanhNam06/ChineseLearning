@@ -4,12 +4,36 @@ import { useSelector } from 'react-redux'
 import { Home, BookOpen, Mic, PenTool, LogOut, Search, Flame, Star, Trophy, GraduationCap, User, ShieldCheck, Menu, X, Swords } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getRankInfo } from '../lib/ranks'
+
+// Custom Logo Component — unique hand-crafted SVG
+const AppLogo = ({ size = 40 }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-lg">
+    <defs>
+      <linearGradient id="logoBg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#6366f1" />
+        <stop offset="50%" stopColor="#8b5cf6" />
+        <stop offset="100%" stopColor="#ec4899" />
+      </linearGradient>
+      <linearGradient id="textGlow" x1="8" y1="8" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="100%" stopColor="#e0e7ff" />
+      </linearGradient>
+    </defs>
+    <rect width="40" height="40" rx="14" fill="url(#logoBg)" />
+    <rect x="2" y="2" width="36" height="36" rx="12" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="1"/>
+    {/* Chinese character 学 (learn) — hand-crafted paths */}
+    <text x="20" y="29" textAnchor="middle" fill="url(#textGlow)" fontSize="24" fontWeight="900" fontFamily="serif" style={{filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))'}}>学</text>
+  </svg>
+);
 
 export default function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useSelector(state => state.auth);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const rankInfo = getRankInfo(profile?.exp || 0);
 
   const navItems = [
     { name: 'Bảng điều khiển', path: '/', icon: Home },
@@ -38,10 +62,10 @@ export default function MainLayout() {
     <>
       <div className="p-8 pb-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-            <GraduationCap className="w-6 h-6 text-white" />
+          <div className="transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <AppLogo size={40} />
           </div>
-          <h1 className="text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             Học tiếng Trung
           </h1>
         </Link>
@@ -61,7 +85,7 @@ export default function MainLayout() {
               to={item.path} 
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold text-sm ${
                 isActive 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 border-none' 
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-100 border-none' 
                   : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
               }`}
             >
@@ -83,7 +107,10 @@ export default function MainLayout() {
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-xs font-black text-slate-800 truncate">{profile?.username || user?.email?.split('@')[0] || 'Học Viên'}</p>
-              <p className="text-[10px] text-indigo-500 font-bold">⭐ {profile?.exp || 0} EXP</p>
+              <p className="text-[10px] font-black text-purple-600 truncate">{rankInfo.currentRank.name}</p>
+              <div className="w-full bg-slate-100 rounded-full h-1 mt-1">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-1 rounded-full transition-all" style={{ width: `${rankInfo.progress}%` }}></div>
+              </div>
             </div>
           </div>
         </Link>
@@ -145,10 +172,13 @@ export default function MainLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="hidden md:flex items-center gap-2 text-[10px] md:text-xs font-black text-purple-700 bg-purple-50 px-3 md:px-4 py-2 rounded-xl shadow-sm border border-purple-100">
+              ⚔️ {rankInfo.currentRank.name}
+            </div>
             <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs font-black text-slate-600 bg-white px-3 md:px-4 py-2 rounded-xl shadow-sm border border-slate-100">
               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" /> 
-              <span className="hidden sm:inline">Kinh nghiệm:</span> {profile?.exp || 0}
+              <span className="hidden sm:inline">EXP:</span> {(profile?.exp || 0).toLocaleString()}
             </div>
             <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs font-black text-slate-600 bg-white px-3 md:px-4 py-2 rounded-xl shadow-sm border border-slate-100">
               <Flame className="w-4 h-4 text-orange-500 fill-orange-500" /> 

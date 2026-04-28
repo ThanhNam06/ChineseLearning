@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
-import { Mic, Square, Loader2, CheckCircle, Sparkles, RotateCcw, ChevronRight } from 'lucide-react';
+import { Mic, Square, Loader2, CheckCircle, Sparkles, RotateCcw, ChevronRight, SplitSquareHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSpeechProvider, getAIFeedbackProvider } from '../lib/aiProvider';
+import { pinyin } from 'pinyin-pro';
 
 // Danh sách câu luyện tập - dễ mở rộng
 const PRACTICE_SENTENCES = [
@@ -34,14 +35,15 @@ export default function Speaking() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiFeedback, setAiFeedback] = useState(null);
   const [sentenceIndex, setSentenceIndex] = useState(0);
-  const [customSentence, setCustomSentence] = useState({ hanzi: '', pinyin: '', meaning: '' });
+  const [customSentenceList, setCustomSentenceList] = useState([]);
   const [useCustom, setUseCustom] = useState(false);
 
   // AI Provider Layer
   const speechProviderRef = useRef(null);
   const feedbackProvider = getAIFeedbackProvider();
 
-  const currentSentence = useCustom && customSentence.hanzi ? customSentence : PRACTICE_SENTENCES[sentenceIndex];
+  const currentList = useCustom && customSentenceList.length > 0 ? customSentenceList : PRACTICE_SENTENCES;
+  const currentSentence = currentList[sentenceIndex] || PRACTICE_SENTENCES[0];
 
   const handleTranscriptChunk = useCallback((text) => {
     setTranscript(prev => (prev + ' ' + text).trim());
@@ -119,7 +121,7 @@ export default function Speaking() {
   };
 
   const nextSentence = () => {
-    setSentenceIndex(i => (i + 1) % PRACTICE_SENTENCES.length);
+    setSentenceIndex(i => (i + 1) % currentList.length);
     setTranscript('');
     setAiFeedback(null);
   };
@@ -129,9 +131,23 @@ export default function Speaking() {
     setAiFeedback(null);
   };
 
+  const [rawCustomInput, setRawCustomInput] = useState('');
+
   const handleCustomSubmit = (e) => {
     e.preventDefault();
+    if (!rawCustomInput.trim()) return;
+    
+    // Tách đoạn văn thành các câu dựa vào dấu chấm câu
+    const sentences = rawCustomInput.split(/[。！？\n]+/).filter(s => s.trim().length > 0);
+    
+    const parsedList = sentences.map(s => {
+      const hz = s.trim();
+      return { hanzi: hz, pinyin: pinyin(hz), meaning: 'Câu tự nhập' };
+    });
+
+    setCustomSentenceList(parsedList);
     setUseCustom(true);
+    setSentenceIndex(0);
     setTranscript('');
     setAiFeedback(null);
   };
@@ -192,19 +208,25 @@ export default function Speaking() {
 
           {/* Custom Sentence Input */}
           <form onSubmit={handleCustomSubmit} className="bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/50 space-y-4">
-            <h3 className="text-lg font-black text-slate-800">Hoặc tự nhập câu:</h3>
+            <h3 className="text-lg font-black text-slate-800">Hoặc tự nhập câu/đoạn văn:</h3>
             <textarea 
-              rows="2"
-              placeholder="VD: 床前明月光..." 
-              value={customSentence.hanzi}
-              onChange={(e) => setCustomSentence({ ...customSentence, hanzi: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-100 resize-none"
+              rows="3"
+              placeholder="Nhập tiếng Trung. AI sẽ tự tạo Pinyin và chia nhỏ nếu quá dài..." 
+              value={rawCustomInput}
+              onChange={(e) => setRawCustomInput(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-100 resize-none font-medium"
               required
             />
-            <button type="submit" className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-md">
-              Luyện câu này
+            <button type="submit" className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-md flex items-center justify-center gap-2">
+              <SplitSquareHorizontal className="w-5 h-5" /> Xử lý & Luyện tập
             </button>
           </form>
+          
+          {useCustom && customSentenceList.length > 1 && (
+             <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
+               <p className="text-sm font-bold text-purple-700">Đoạn văn của bạn có {customSentenceList.length} câu. Đang luyện câu số {sentenceIndex + 1}.</p>
+             </div>
+          )}
         </div>
 
         {/* Right Column: Practice Area */}

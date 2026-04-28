@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Headphones, BookOpen, Play, CheckCircle2, Volume2, ChevronRight, Clock } from 'lucide-react';
+import { Headphones, BookOpen, Play, CheckCircle2, Volume2, ChevronRight, Clock, Save, Trash2, Library } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateExp } from '../store/authSlice';
 import { logStudyActivity } from '../lib/progress';
@@ -16,6 +16,7 @@ export default function Learning() {
   const [filterType, setFilterType] = useState('all');
   const [filterTopic, setFilterTopic] = useState('Tất cả');
   const [completed, setCompleted] = useState([]);
+  const [savedLibrary, setSavedLibrary] = useState(() => JSON.parse(localStorage.getItem('saved_custom_library')) || []);
 
   const dispatch = useDispatch();
   const { user, profile } = useSelector(state => state.auth);
@@ -76,7 +77,7 @@ export default function Learning() {
   const handleComplete = async (lessonId) => {
     if (completed.includes(lessonId)) return;
     setCompleted(prev => [...prev, lessonId]);
-    const expGained = 25;
+    const expGained = Math.floor(Math.random() * 10) + 1;
     if (user && profile) {
       dispatch(updateExp(expGained));
       await logStudyActivity(user.id, expGained, 0); 
@@ -90,11 +91,37 @@ export default function Learning() {
     }
   };
 
-  const filtered = lessons.filter(l => {
+  const filtered = filterType === 'library' ? savedLibrary : lessons.filter(l => {
     const matchType = filterType === 'all' || l.type === filterType;
     const matchTopic = filterTopic === 'Tất cả' || l.topic === filterTopic;
     return matchType && matchTopic;
   });
+
+  const handleSaveToLibrary = () => {
+    if (!selectedLesson || selectedLesson.id !== 'custom' || !selectedLesson.content.trim()) return;
+    const newLesson = {
+      id: 'custom_' + Date.now(),
+      title: 'Đoạn văn đã lưu ' + new Date().toLocaleDateString(),
+      content: selectedLesson.content,
+      type: 'custom_saved',
+      hsk_level: 'Tùy chọn',
+      topic: 'Lưu trữ',
+      pinyin: selectedLesson.content.slice(0, 30) + '...',
+      translation: 'Lưu lúc ' + new Date().toLocaleTimeString()
+    };
+    const newLibrary = [newLesson, ...savedLibrary];
+    setSavedLibrary(newLibrary);
+    localStorage.setItem('saved_custom_library', JSON.stringify(newLibrary));
+    alert('Đã lưu vào Thư viện!');
+  };
+
+  const handleDeleteFromLibrary = (id, e) => {
+    e.stopPropagation();
+    const newLib = savedLibrary.filter(l => l.id !== id);
+    setSavedLibrary(newLib);
+    localStorage.setItem('saved_custom_library', JSON.stringify(newLib));
+    if (selectedLesson?.id === id) setSelectedLesson(null);
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
@@ -120,7 +147,7 @@ export default function Learning() {
           
           <div className="h-10 w-px bg-slate-200 mx-1 hidden sm:block"></div>
 
-          {[{ id: 'all', label: 'Tất cả' }, { id: 'listening', label: '🎧 Nghe' }, { id: 'reading', label: '📖 Đọc' }].map(t => (
+          {[{ id: 'all', label: 'Tất cả' }, { id: 'listening', label: '🎧 Nghe' }, { id: 'reading', label: '📖 Đọc' }, { id: 'library', label: '📚 Thư viện' }].map(t => (
             <button key={t.id} onClick={() => setFilterType(t.id)}
               className={`px-5 py-3 rounded-2xl font-bold text-sm transition-all ${filterType === t.id ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
               {t.label}
@@ -130,14 +157,18 @@ export default function Learning() {
       </div>
 
       {/* Topic filter */}
-      <div className="flex gap-3 flex-wrap">
-        {TOPICS.map(t => (
-          <button key={t} onClick={() => setFilterTopic(t)}
-            className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${filterTopic === t ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-400'}`}>
-            {t}
-          </button>
-        ))}
-      </div>
+      <AnimatePresence>
+      {filterType !== 'library' && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex gap-3 flex-wrap">
+          {TOPICS.map(t => (
+            <button key={t} onClick={() => setFilterTopic(t)}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${filterTopic === t ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-400'}`}>
+              {t}
+            </button>
+          ))}
+        </motion.div>
+      )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Lesson List */}
@@ -155,12 +186,18 @@ export default function Learning() {
                 : 'bg-white border-slate-100 hover:border-indigo-200 shadow-sm hover:shadow-md'}`}
             >
               <div className="flex justify-between items-start mb-3">
-                <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${selectedLesson?.id === lesson.id ? 'bg-white/20 text-white' : lesson.type === 'listening' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                  {lesson.type === 'listening' ? '🎧 Nghe' : '📖 Đọc'}
+                <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${selectedLesson?.id === lesson.id ? 'bg-white/20 text-white' : lesson.type === 'listening' ? 'bg-blue-50 text-blue-600' : lesson.type === 'custom_saved' ? 'bg-purple-50 text-purple-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                  {lesson.type === 'listening' ? '🎧 Nghe' : lesson.type === 'custom_saved' ? '📚 Thư viện' : '📖 Đọc'}
                 </span>
                 <div className="flex items-center gap-2">
                   {completed.includes(lesson.id) && <CheckCircle2 className={`w-4 h-4 ${selectedLesson?.id === lesson.id ? 'text-white' : 'text-green-500'}`} />}
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${selectedLesson?.id === lesson.id ? 'bg-white/20 text-white' : LEVEL_COLORS[lesson.difficulty]}`}>{lesson.difficulty}</span>
+                  {lesson.type === 'custom_saved' ? (
+                     <button onClick={(e) => handleDeleteFromLibrary(lesson.id, e)} className="p-1 hover:bg-red-100 hover:text-red-600 rounded-lg text-slate-300 transition-colors">
+                       <Trash2 className="w-4 h-4" />
+                     </button>
+                  ) : (
+                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${selectedLesson?.id === lesson.id ? 'bg-white/20 text-white' : LEVEL_COLORS[lesson.difficulty]}`}>{lesson.difficulty}</span>
+                  )}
                 </div>
               </div>
               <h4 className={`text-lg font-black mb-1 ${selectedLesson?.id === lesson.id ? 'text-white' : 'text-slate-800'}`}>{lesson.title}</h4>
@@ -177,37 +214,52 @@ export default function Learning() {
           <AnimatePresence mode="wait">
             {selectedLesson ? (
               <motion.div key={selectedLesson.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 p-8">
-                <div className="flex items-start justify-between mb-8">
-                  <div>
-                    <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-lg uppercase">{selectedLesson.type === 'listening' ? '🎧 Luyện nghe' : '📖 Luyện đọc'}</span>
-                    <h3 className="text-2xl font-black text-slate-800 mt-3">{selectedLesson.title}</h3>
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-lg uppercase">
+                        {selectedLesson.type === 'listening' ? '🎧 Luyện nghe' : selectedLesson.type === 'custom_saved' ? '📚 Đoạn văn đã lưu' : '📖 Luyện đọc'}
+                      </span>
+                      <h3 className="text-2xl font-black text-slate-800 mt-3">
+                        {selectedLesson.id === 'custom' || selectedLesson.type === 'custom_saved' ? 'Phòng Tập Tự Do' : selectedLesson.title}
+                      </h3>
+                    </div>
+                    <div className="flex gap-2">
+                      {selectedLesson.id === 'custom' && (
+                        <button onClick={handleSaveToLibrary} className="p-4 bg-emerald-100 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex-shrink-0" title="Lưu vào Thư viện">
+                          <Save className="w-6 h-6" />
+                        </button>
+                      )}
+                      <button onClick={() => playAudio(selectedLesson.content)}
+                        className="p-4 bg-indigo-100 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex-shrink-0" title="Nghe phát âm">
+                        <Volume2 className="w-6 h-6" />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => playAudio(selectedLesson.content)}
-                    className="p-4 bg-indigo-100 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex-shrink-0">
-                    <Volume2 className="w-6 h-6" />
-                  </button>
-                </div>
 
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  {selectedLesson.id === 'custom' ? (
-                    <div className="bg-slate-50 rounded-3xl p-8 text-center flex-1 flex flex-col">
-                      <textarea
-                        value={selectedLesson.content}
-                        onChange={(e) => setSelectedLesson({ ...selectedLesson, content: e.target.value })}
-                        placeholder="Dán hoặc nhập đoạn văn tiếng Trung bạn muốn luyện đọc vào đây..."
-                        className="w-full flex-1 bg-transparent border-none outline-none text-2xl font-bold text-slate-700 resize-none placeholder:text-slate-300 text-center"
-                      />
+                  <div className="flex-1 flex flex-col justify-center space-y-6">
+                    {selectedLesson.id === 'custom' || selectedLesson.type === 'custom_saved' ? (
+                      <div className="bg-slate-50 rounded-3xl p-8 text-center flex-1 flex flex-col border-2 border-dashed border-indigo-100 shadow-inner">
+                        <textarea
+                          value={selectedLesson.content}
+                          onChange={(e) => setSelectedLesson({ ...selectedLesson, content: e.target.value })}
+                          readOnly={selectedLesson.type === 'custom_saved'}
+                          placeholder="Dán hoặc nhập đoạn văn tiếng Trung bạn muốn luyện đọc vào đây..."
+                          className="w-full flex-1 bg-transparent border-none outline-none text-2xl font-bold text-slate-700 resize-none placeholder:text-slate-300 text-center"
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50 rounded-3xl p-8 text-center">
+                        <p className="text-4xl font-black text-slate-800 leading-relaxed tracking-wide">{selectedLesson.content}</p>
+                      </div>
+                    )}
+                    <div className="text-center space-y-2">
+                      <p className="text-xl text-indigo-500 font-bold italic">{selectedLesson.pinyin}</p>
+                      <p className="text-lg text-slate-400 font-medium">
+                        {selectedLesson.id === 'custom' ? 'Nhập văn bản rồi nhấn 🔊 để nghe, hoặc 💾 để lưu lại!' : 
+                         selectedLesson.type === 'custom_saved' ? 'Đoạn văn đã lưu của bạn' : `"${selectedLesson.translation}"`}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="bg-slate-50 rounded-3xl p-8 text-center">
-                      <p className="text-4xl font-black text-slate-800 leading-relaxed tracking-wide">{selectedLesson.content}</p>
-                    </div>
-                  )}
-                  <div className="text-center space-y-2">
-                    <p className="text-xl text-indigo-500 font-bold italic">{selectedLesson.pinyin}</p>
-                    <p className="text-lg text-slate-400 font-medium">{selectedLesson.id === 'custom' ? 'Nhấn nút 🔊 góc trên để nghe AI đọc văn bản của bạn!' : `"${selectedLesson.translation}"`}</p>
                   </div>
-                </div>
 
                 <div className="mt-8 pt-6 border-t border-slate-100 flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
@@ -222,7 +274,7 @@ export default function Learning() {
                         : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
                     >
                       <CheckCircle2 className="w-5 h-5" />
-                      {completed.includes(selectedLesson.id) ? 'Đã hoàn thành (+25 EXP)' : 'Hoàn thành bài học'}
+                      {completed.includes(selectedLesson.id) ? 'Đã hoàn thành' : 'Hoàn thành bài học'}
                     </button>
                   )}
                 </div>

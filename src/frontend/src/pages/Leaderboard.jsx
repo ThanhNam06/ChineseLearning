@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Flame, Star, RefreshCw, Swords, Medal, UserPlus, Clock, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSelector } from 'react-redux';
+import { getRankInfo } from '../lib/ranks';
 
 // Inline spinner to avoid any bundle caching issues with Loader2
 const Spinner = () => (
@@ -159,9 +160,14 @@ export default function Leaderboard() {
                     </div>
                     <div>
                       <p className="font-black text-slate-800">{leader.username || 'Người dùng'} {leader.id === user?.id && <span className="text-xs text-indigo-500 ml-2 font-bold">(Bạn)</span>}</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1">
-                        <Flame className="w-3 h-3 text-orange-400" /> Chuỗi {leader.streak || 0} ngày
-                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+                          {getRankInfo(leader.exp || 0).currentRank.name}
+                        </span>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                          <Flame className="w-3 h-3 text-orange-400" /> Chuỗi {leader.streak || 0} ngày
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-6">

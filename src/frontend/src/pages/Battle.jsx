@@ -180,8 +180,9 @@ export default function Battle() {
       .eq('id', user.id);
     
     if (!error) {
-      dispatch(updateExp(change > 0 ? 50 : 10));
-      await logStudyActivity(user.id, change > 0 ? 50 : 10, 0);
+      const expGained = Math.floor(Math.random() * 10) + 1;
+      dispatch(updateExp(expGained));
+      await logStudyActivity(user.id, expGained, 0);
     }
   };
 
